@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html class="no-js">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Bar chart</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="style.css">
+        <script src="https://d3js.org/d3.v6.min.js"></script>
+        <script src="https://unpkg.com/topojson@3"></script>
+        <script>
+
+        //var topology = topojson.topology({foo: geojson});
+
+        </script>
+    </head>
+    <body>
+        <script src="https://cdn.freecodecamp.org/testable-projects-fcc/v1/bundle.js"></script>
+        <script>
+
+          document.addEventListener("DOMContentLoaded", function(){
+            async function getData(givenData) {
+                try {
+                    let data = await fetch(givenData);
+                    let jsonData = await data.json();
+                    return jsonData;
+                }
+                catch(error) {
+                    throw new Error(error)
+                }
+            }
+
+            getData("https://cdn.freecodecamp.org/testable-projects-fcc/data/choropleth_map/counties.json").then(countiesData => {
+
+                getData("https://cdn.freecodecamp.org/testable-projects-fcc/data/choropleth_map/for_user_education.json").then(educationData => {
+
+                    let w = 1100
+                    let h = 610
+
+                let tooltip = d3.select(".holder")
+                .append("div")
+                .attr("id", "tooltip")
+                .style("opacity", "0")
+                .text("ASD")
+
+                let svg = d3.select("body")
+                .append("svg")
+                .attr("width", w)
+                .attr("height", h)
+                .style("background-color", "white")
+
+                let path = d3.geoPath()
+                
+                svg  
+                .selectAll("path")  // should be familiar, adding "path" for all data points, like adding 'rect'
+                .data(topojson.feature(countiesData, countiesData.objects.counties).features) // here you convert topojson data to geojson data. I have no idea how the math works. Topojson is like a 'compressed' version of geojson
+                .enter()
+                .append("path")
+                .attr("d", path)
+                .attr("class", "county")
+                .attr("transform", "translate(100, 0)")
+                .attr("data-fips", (d, i) => d.id)
+                .attr("data-education", (d, i) => {
+                        let obj = educationData.find(o => 
+                        o.fips === d.id
+                    )
+
+                    return obj.bachelorsOrHigher
+                })
+                .style("fill", (d, i) => {
+                    let obj = educationData.find(o => 
+                        o.fips === d.id
+                    )
+
+                    if(obj.bachelorsOrHigher < 15)
+                    {
+                        return "green"
+                    }
+                    else if(obj.bachelorsOrHigher < 30) {
+                        return "yellow"
+                    }
+                    else if(obj.bachelorsOrHigher < 45) {
+                        return "orange"
+                    }
+                    else {
+                        return "red"
+                    }
+                    
+                })
+                .on("mouseover", function(e) {
+                tooltip.style("opacity", "1").attr("data-education", e.target.dataset.education)
+                .html("Education: "+e.target.dataset.education)
+                .style("border", "1px solid black")
+            })
+            .on("mouseout", () => {
+                tooltip.style("opacity", "0").attr("data-education", "")
+                .style("border", "none")
+            })
+                })
+            })
+            
+          })
+
+        </script>
+        <span id="title">Choregraph</span>
+        <span id="description">Opis</span>
+        <svg class="colors-info" id="legend" width="200" height="50">
+            <rect width="50" x="0" height="50" style="fill: red"></rect>
+            <rect width="50" x="50" height="50" style="fill: blue"></rect>
+            <rect width="50" x="100" height="50" style="fill: green"></rect>
+            <rect width="50" x="150" height="50" style="fill: yellow"></rect>
+        </svg>
+        <div></div>
+        <p class="holder"></p>
+    </body>
+</html>

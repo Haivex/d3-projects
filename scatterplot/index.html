@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html class="no-js">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Scatterplot</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="style.css">
+    </head>
+    <body>
+        <script src="https://d3js.org/d3.v6.min.js"></script>
+        <script src="https://cdn.freecodecamp.org/testable-projects-fcc/v1/bundle.js"></script>
+        <script>
+
+          document.addEventListener("DOMContentLoaded", function(){
+            async function getData() {
+                try {
+                    let data = await fetch("https://raw.githubusercontent.com/freeCodeCamp/ProjectReferenceData/master/cyclist-data.json");
+                    let jsonData = await data.json();
+                    return jsonData;
+                }
+                catch(error) {
+                    throw new Error(error)
+                }
+            }
+            
+            getData().then(data => {
+
+                let w = 1000
+                let h = 400
+
+                let tooltip = d3.select(".holder")
+                .append("div")
+                .attr("id", "tooltip")
+                .style("opacity", "0")
+                .text("ASD")
+
+                //console.log(data)
+
+                let years = data.map((el) => {
+                    let parseYear = d3.timeParse("%Y")
+                    return parseYear(el.Year)
+                })
+
+                //console.log(years)
+
+                let times = data.map((el) => {
+                    let parseTime = d3.timeParse("%M:%S")
+                    return parseTime(el.Time)
+                })
+
+                console.log(times)
+
+                let maxYear= d3.max(years);
+                let minYear = d3.min(years);
+                let maxTime = d3.max(times);
+                let minTime = d3.min(times);
+
+            let xScale = d3.scaleTime()
+            .domain([minYear, maxYear])
+            .range([0, w])
+
+            let timeFormat = d3.timeFormat("%M:%S")
+
+            let yScale = d3.scaleTime()
+            .domain([minTime, maxTime])
+            .range([h, 0])
+
+            const xAxis = d3.axisBottom(xScale)
+            const yAxis = d3.axisLeft(yScale).tickFormat(timeFormat)
+
+            let svg = d3.select("body")
+            .append("svg")
+            .attr("width", w + 100)
+            .attr("height", h + 100)
+            .style("background-color", "white")
+
+            svg.append("g")
+            .attr("id", "x-axis")
+            .attr("transform", "translate(50, 450)")
+            .call(xAxis)
+
+            svg.append("g")
+            .attr("id", "y-axis")
+            .attr("transform", "translate(50 ,50)")
+            .call(yAxis)
+
+
+            svg.selectAll("circle")
+            .data(data)
+            .enter()
+            .append("circle")
+            .attr("cx", (d, i) => xScale(years[i]))
+            .attr("cy", (d, i) => yScale(times[i]))
+            .attr("r", 5)
+            .attr("class", "dot")
+            .attr("data-xvalue",(d, i) => years[i])
+            .attr("data-yvalue", (d, i) => times[i])
+            .attr("transform", "translate(50, 50)")
+            .on("mouseover", function(e) {
+                tooltip.style("opacity", "1").attr("data-year", e.target.dataset.xvalue).attr("data-yvalue", e.target.dataset.yvalue)
+                .html("Rok: "+e.target.dataset.xvalue+" <br> Czas: "+e.target.dataset.yvalue)
+                .style("border", "1px solid black")
+            })
+            .on("mouseout", () => {
+                tooltip.style("opacity", "0").attr("data-date", "")
+                .style("border", "none")
+            })
+            })
+            
+            })
+            
+        </script>
+        <span id="title">Scatterplot</span>
+        <div></div>
+        <p class="holder"></p>
+        <div id="legend"></div>
+    </body>
+</html>

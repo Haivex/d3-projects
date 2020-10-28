@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html class="no-js">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Bar chart</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="style.css">
+        <script src="https://d3js.org/d3.v6.min.js"></script>
+    </head>
+    <body>
+        <script src="https://cdn.freecodecamp.org/testable-projects-fcc/v1/bundle.js"></script>
+        <script>
+
+          document.addEventListener("DOMContentLoaded", function(){
+            async function getData() {
+                try {
+                    let data = await fetch("https://cdn.freecodecamp.org/testable-projects-fcc/data/tree_map/video-game-sales-data.json");
+                    let jsonData = await data.json();
+                    return jsonData
+                }
+                catch(error) {
+                    throw new Error(error)
+                }
+            }
+            
+            getData().then(data => {
+
+                let w = 1000
+                let h = 400
+
+                color = d3.scaleOrdinal(d3.schemeCategory10)
+
+                let tooltip = d3.select(".holder")
+                .append("div")
+                .attr("id", "tooltip")
+                .style("opacity", "0")
+                .text("ASD")
+
+                let svg = d3.select("body")
+                .append("svg")
+                .attr("width", w)
+                .attr("height", h)
+                .style("background-color", "white")
+
+                let root = d3.hierarchy(data).sum(function(d) { return d.value; }).sort(function(a, b) { return b.value - a.value; })
+                
+                let treemap = d3.treemap().size([w, h]).padding(2)
+                treemap(root)
+
+                var cell = svg
+                .selectAll('g')
+                .data(root.leaves())
+                .enter()
+                .append('g')
+                .attr('class', 'group')
+                .attr('transform', d => `translate(${d.x0},${d.y0})`) 
+
+                cell
+                .append("rect")
+                .attr("class", "tile")
+                .attr("data-name", (d) => d.data.name)
+                .attr("data-category", (d) => d.data.category)
+                .attr("data-value", (d) => d.data.value)
+                .attr("width", d => d.x1 - d.x0)
+                .attr("height", d => d.y1 - d.y0)
+                .attr("fill", d => color(d.data.category))
+                
+                .on("mouseover", function(e) {
+                tooltip.style("opacity", "1").attr("data-value", e.target.dataset.value)
+                .html("Value: "+e.target.dataset.value+" <br> Name: "+e.target.dataset.name)
+                .style("border", "1px solid black")
+            })
+            .on("mouseout", () => {
+                tooltip.style("opacity", "0").attr("data-value", "")
+                .style("border", "none")
+            })
+
+            cell.append('text')                                           // append text node for each cell / movie
+    .selectAll('tspan')                                       
+    .data(d => d.data.name.split(/(?=[A-Z][^A-Z])/g))         // split the name and use that as data to create indiviual tspan elements
+    .enter()
+    .append('tspan')                                          // append tspan node for each element of the string which got split
+    .attr('font-size', '8px')
+    .attr('x', 4)
+    .attr('y', (d, i) => 13 + 10 * i)                         // offset the y positioning with the index of the data
+    .text(d => d);
+            // .append("text")
+            // .attr("class", "text")
+            // .attr("x", d => d.x0 +5)
+            // .attr("y", d => d.y0 + 20)
+            // .attr("width", d => d.x1 - d.x0)
+            // .attr("height", d => d.y1 - d.y0)
+            // .text(d => d.data.name)
+
+            })
+            
+          })
+
+        </script>
+        <span id="title">Treemap</span>
+        <span id="description">Desc</span>
+        <div></div>
+        <p class="holder"></p>
+        <svg class="colors-info" id="legend" width="200" height="50">
+            <rect class="legend-item" width="50" x="0" height="50" style="fill: red"></rect>
+            <rect class="legend-item" width="50" x="50" height="50" style="fill: blue"></rect>
+            <rect class="legend-item" width="50" x="100" height="50" style="fill: green"></rect>
+            <rect class="legend-item" width="50" x="150" height="50" style="fill: yellow"></rect>
+        </svg>
+    </body>
+</html>

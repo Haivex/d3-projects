@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html class="no-js">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Bar chart</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="style.css">
+    </head>
+    <body>
+        <script src="https://d3js.org/d3.v6.min.js"></script>
+        <script src="https://cdn.freecodecamp.org/testable-projects-fcc/v1/bundle.js"></script>
+        <script>
+
+          document.addEventListener("DOMContentLoaded", function(){
+            async function getData() {
+                try {
+                    let data = await fetch("https://raw.githubusercontent.com/freeCodeCamp/ProjectReferenceData/master/global-temperature.json");
+                    let jsonData = await data.json();
+                    return jsonData
+                }
+                catch(error) {
+                    throw new Error(error)
+                }
+            }
+            
+            getData().then(data => {
+                console.log(data)
+
+                let w = 1000
+                let h = 400
+
+                let tooltip = d3.select(".holder")
+                .append("div")
+                .attr("id", "tooltip")
+                .style("opacity", "0")
+                .text("ASD")
+
+                let parsedYears = data.monthlyVariance.map((el) => {
+                    let parseTime = d3.timeParse("%Y")
+                    return parseTime(el.year)
+                })
+
+                let years = data.monthlyVariance.map((el) => {
+                    return el.year
+                })
+
+                console.log(years)
+
+                 let maxDate = d3.max(parsedYears);
+                 let minDate = d3.min(parsedYears);
+
+                 let minYear = Math.min(...years)
+                 let maxYear =  Math.max(...years);
+
+            let xScale = d3.scaleTime()
+            .domain([minDate, maxDate])
+            .range([0, w])
+
+            let yScale = d3.scaleTime()
+            .domain([new Date(1970, 0, 1), new Date(1970, 11, 31)])
+            .range([h, 0])
+
+            const xAxis = d3.axisBottom(xScale)
+            const yAxis = d3.axisLeft(yScale).tickFormat(d3.timeFormat("%B"))
+
+            let svg = d3.select("body")
+            .append("svg")
+            .attr("width", w + 100)
+            .attr("height", h + 100)
+            .style("background-color", "white")
+
+            svg.append("g")
+            .attr("id", "x-axis")
+            .attr("transform", "translate(50, 450)")
+            .call(xAxis)
+
+            svg.append("g")
+            .attr("id", "y-axis")
+            .attr("transform", "translate(50 ,50)")
+            .call(yAxis)
+
+            let barWidth = w / 262
+            console.log(barWidth)
+
+
+
+            svg.selectAll("rect")
+            .data(data.monthlyVariance)
+            .enter()
+            .append("rect")
+            .attr("x", (d, i) => xScale(parsedYears[i]))
+            .attr("y", (d, i) => yScale(new Date(1970, d.month, 1)))
+            .attr("width", barWidth)
+            .attr("height", 15)
+            .attr("class", "cell")
+            .attr("data-month", (d) => d.month - 1)
+            .attr("data-year", (d) => d.year)
+            .attr("data-temp", (d) => d.variance)
+            .style("fill",  (d) => {
+                if(d.variance > 1) {
+                    return "green"
+                }
+                else if(d.variance >= 0)
+                {
+                    return "yellow"
+                }
+                else if(d.variance >= -1) {
+                    return "blue"
+                }
+                else {
+                    return "red"
+                }
+            })
+            .attr("transform", "translate(50, 50)")
+            .on("mouseover", function(e) {
+                tooltip.style("opacity", "1").attr("data-year", e.target.dataset.year).attr("data-month", e.target.dataset.month).attr("data-temp", e.target.dataset.temp)
+                .html("Miesiac: "+e.target.dataset.month+" <br> Rok: "+e.target.dataset.year+"<br> Temperatura: "+e.target.dataset.temp)
+                .style("border", "1px solid black")
+            })
+            .on("mouseout", () => {
+                tooltip.style("opacity", "0").attr("data-year", "").attr("data-month", "").attr("data-temp", "")
+                .style("border", "none")
+            })
+
+            })
+            
+            })
+
+        </script>
+        <span id="title">Bar Chart</span>
+        <span id="description">Description</span>
+        <div></div>
+        <p class="holder"></p>
+        <svg class="colors-info" id="legend" width="200" height="50">
+            <rect width="50" x="0" height="50" style="fill: red"></rect>
+            <rect width="50" x="50" height="50" style="fill: blue"></rect>
+            <rect width="50" x="100" height="50" style="fill: green"></rect>
+            <rect width="50" x="150" height="50" style="fill: yellow"></rect>
+        </svg>
+    </body>
+</html>
