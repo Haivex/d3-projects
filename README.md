@@ -4,3 +4,10 @@ W tym repozytorium uczyłem się wykorzystać bibliotekę D3 do wizualizowania d
 - Wykres kołowy
 - Wykres punktowy
 - Mapa drzewa
+
+## English version
+In this repositorium I was learning how to use D3 - library for visualizing data. I've created the following visualizations:
+- A bar graph
+- Pie chart
+- Scatter plot
+- Tree Map
